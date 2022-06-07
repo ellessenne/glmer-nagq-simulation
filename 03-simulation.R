@@ -24,9 +24,28 @@ scenarios <- crossing(
   k = .k,
   b = seq(.B)
 )
+# Random seed for reproducibility
+set.seed(138475683)
+
+# True parameters
+truth <- tibble(
+  term = c("(Intercept)", "trt", "time", "trt:time", "sd__(Intercept)"),
+  true = c(-2, -1, 0.5, -0.1, 4)
+)
+saveRDS(object = truth, file = "data/03-truth.RDS")
 
 # Simulate .B datasets:
-data <- map(.x = seq(.B), .f = function(i) simulate_data(i = i, N = .N))
+data <- map(.x = seq(.B), .f = function(i) {
+  simulate_data(
+    i = i,
+    N = .N,
+    beta0 = truth$true[truth$term == "(Intercept)"],
+    beta1 = truth$true[truth$term == "trt"],
+    beta2 = truth$true[truth$term == "time"],
+    beta3 = truth$true[truth$term == "trt:time"],
+    sigma_b = truth$true[truth$term == "sd__(Intercept)"]
+  )
+})
 
 # Run .B repetitions using {furrr}
 plan(multisession)
