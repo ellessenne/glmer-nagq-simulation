@@ -14,11 +14,11 @@ source("02-fit-model.R")
 
 # Simulation settings:
 # Number of repetitions
-.B <- 10
+.B <- 1000
 # Number of patients per dataset
-.N <- 200
+.N <- 500
 # Number of integration points to test
-.k <- c(0:10, 15, 20, 25, 30, 40, 50)
+.k <- c(0:10, seq(15, 50, by = 5))
 # Dataset with scenarios/repetition combinations:
 scenarios <- crossing(
   k = .k,
