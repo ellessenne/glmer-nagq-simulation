@@ -6,7 +6,6 @@ library(tidyverse)
 library(ggridges)
 library(rsimsum)
 library(ragg)
-library(hrbrthemes)
 
 # Load and combine simulation results
 simdata <- readRDS(file = "data/03-simulation-res.RDS")
@@ -21,28 +20,50 @@ sims <- tidy(summary(sims, stats = "bias")) %>%
   select(-stat) %>%
   rename(Term = term)
 
-# Plot for bias
-pbias <- ggplot(sims, aes(x = gqn, y = est, color = factor(sig))) +
+# Plot for bias, fixed effects only
+pbias_fixed <- sims %>%
+  filter(Term != "sd__(Intercept)") %>%
+  ggplot(aes(x = gqn, y = est, color = factor(sig))) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
   geom_line(linetype = "dotted") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 1 / 2) +
   geom_point() +
   facet_wrap(~Term, scales = "free_y", ncol = 2, labeller = label_both) +
   scale_x_continuous(breaks = seq(0, 50, by = 10)) +
+  scale_y_continuous(n.breaks = 5) +
   scale_color_manual(values = c("grey50", "black")) +
   theme_bw(base_size = 12) +
   theme(panel.grid.minor = element_blank(), legend.position = "none") +
-  labs(x = "Quadrature Points", y = "Bias (95% Monte Carlo C.I.)")
-pbias
-ggsave(filename = "figures/pbias.png", plot = pbias, device = agg_png, width = 6, height = 5)
+  labs(x = "Quadrature Points", y = "Bias (95% C.I.)")
+pbias_fixed
+ggsave(filename = "figures/pbias_fixed.png", plot = pbias_fixed, device = agg_png, width = 4, height = 3, dpi = 600)
 
+# Plot for bias, variance components
+pbias_var <- sims %>%
+  filter(Term == "sd__(Intercept)") %>%
+  ggplot(aes(x = gqn, y = est, color = factor(sig))) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
+  geom_line(linetype = "dotted") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 1 / 2) +
+  geom_point() +
+  facet_wrap(~Term, scales = "free_y", ncol = 2, labeller = label_both) +
+  scale_x_continuous(breaks = seq(0, 50, by = 10)) +
+  scale_y_continuous(n.breaks = 5) +
+  scale_color_manual(values = c("grey50", "black")) +
+  theme_bw(base_size = 12) +
+  theme(panel.grid.minor = element_blank(), legend.position = "none") +
+  labs(x = "Quadrature Points", y = "Bias (95% C.I.)")
+pbias_var
+ggsave(filename = "figures/pbias_var.png", plot = pbias_var, device = agg_png, width = 3.5, height = 2.5, dpi = 600)
+
+# Plot for time distribution
 ptime <- res %>%
   distinct(gq, i, time) %>%
-  ggplot(aes(x = time, y = factor(gq), fill = stat(x))) +
-  geom_density_ridges_gradient(show.legend = FALSE, rel_min_height = 0.01) +
-  scale_fill_viridis_c(option = "magma") +
-  scale_x_continuous(expand = c(0, 0)) +
-  theme_bw(base_size = 12) +
-  labs(x = "Time (in seconds)", y = "Quadrature Points")
+  ggplot(aes(x = factor(gq), y = time)) +
+  geom_boxplot(outlier.size = 0.1) +
+  scale_y_continuous(n.breaks = 5) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  labs(y = "Time (in seconds)", x = "Quadrature Points")
 ptime
-ggsave(filename = "figures/ptime.png", plot = ptime, device = agg_png, width = 4, height = 4)
+ggsave(filename = "figures/ptime.png", plot = ptime, device = agg_png, width = 3.5, height = 2.5, dpi = 600)
