@@ -6,6 +6,7 @@ library(tidyverse)
 library(ggridges)
 library(rsimsum)
 library(ragg)
+library(hrbrthemes)
 
 # Load and combine simulation results
 simdata <- readRDS(file = "data/03-simulation-res.RDS")
